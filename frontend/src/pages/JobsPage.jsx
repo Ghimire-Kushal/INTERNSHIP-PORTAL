@@ -1,0 +1,4 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import api from "../services/api";
+export default function JobsPage() { const [jobs,setJobs]=useState([]); const [loading,setLoading]=useState(true); useEffect(()=>{api.get("/jobs/").then(({data})=>setJobs(data.results||data)).finally(()=>setLoading(false));},[]); return <main className="page"><nav><Link className="brand" to="/">CareerBridge</Link><Link to="/dashboard">Dashboard</Link></nav><section className="hero"><p className="eyebrow">OPEN ROLES</p><h1>Explore opportunities</h1>{loading?<p>Loading jobs…</p>:jobs.length?<div>{jobs.map(job=><Link to={`/jobs/${job.id}`} key={job.id}><h2>{job.title}</h2><p>{job.company_name} · {job.location} · {job.job_type}</p></Link>)}</div>:<p>No open jobs found.</p>}</section></main>; }

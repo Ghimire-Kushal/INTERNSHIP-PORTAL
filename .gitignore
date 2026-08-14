@@ -1,0 +1,21 @@
+# Python
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/db.sqlite3
+
+# Django generated files
+backend/media/
+backend/staticfiles/
+
+# JavaScript
+# Dependency libraries (never commit installed packages)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Environment files
+.env
+backend/.env
+frontend/.env
