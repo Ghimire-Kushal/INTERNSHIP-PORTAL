@@ -6,7 +6,32 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from jobs.models import Job
 from .models import Application
+from .models import SavedJob
 from .serializers import ApplicationSerializer, StatusSerializer
+from .serializers import SavedJobSerializer
+from .models import Interview
+from .serializers import InterviewSerializer
+class InterviewsView(generics.ListCreateAPIView):
+ permission_classes=[IsAuthenticated];serializer_class=InterviewSerializer
+ def get_queryset(self):
+  qs=Interview.objects.select_related("application__job")
+  return qs.filter(application__job__company__owner=self.request.user) if self.request.user.role=="employer" else qs.filter(application__student=self.request.user)
+ def post(self,request):
+  if request.user.role!="employer": raise PermissionDenied("Only employers can schedule interviews.")
+  application=Application.objects.filter(pk=request.data.get("application"),job__company__owner=request.user).first()
+  if not application: raise PermissionDenied("Application not found.")
+  serializer=InterviewSerializer(data=request.data);serializer.is_valid(raise_exception=True);serializer.save(application=application);application.status=Application.Status.INTERVIEW;application.save(update_fields=["status","updated_at"]);return Response(serializer.data,status=201)
+class SavedJobsView(generics.ListCreateAPIView):
+ permission_classes=[IsAuthenticated];serializer_class=SavedJobSerializer
+ def get_queryset(self): return SavedJob.objects.filter(student=self.request.user).select_related("job__company")
+ def post(self,request):
+  if request.user.role!="student": raise PermissionDenied("Student account required.")
+  job=Job.objects.filter(pk=request.data.get("job"),status="open").first()
+  if not job: raise ValidationError("Job not found.")
+  saved,_=SavedJob.objects.get_or_create(student=request.user,job=job);return Response(SavedJobSerializer(saved).data,status=201)
+class SavedJobDetailView(APIView):
+ permission_classes=[IsAuthenticated]
+ def delete(self,request,pk): SavedJob.objects.filter(pk=pk,student=request.user).delete();return Response(status=204)
 class ApplyView(APIView):
  permission_classes=[IsAuthenticated]
  def post(self,request,job_id):

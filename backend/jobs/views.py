@@ -27,3 +27,18 @@ class JobViewSet(viewsets.ModelViewSet):
     def mine(self, request):
         if request.user.role != "employer": raise PermissionDenied("Only employers can manage jobs.")
         return Response(self.get_serializer(self.get_queryset(),many=True).data)
+    @action(detail=False, methods=["get"])
+    def recommended(self, request):
+        if not request.user.is_authenticated or request.user.role != "student": raise PermissionDenied("Student account required.")
+        profile = getattr(request.user, "student_profile", None)
+        skills = [] if not profile else list(profile.student_skills.values_list("skill__name", flat=True))
+        jobs = Job.objects.select_related("company", "category").filter(status=Job.Status.OPEN, application_deadline__gte=timezone.localdate())
+        ranked = []
+        for job in jobs:
+            score = sum(skill.lower() in job.skills_required.lower() for skill in skills) * 20
+            if profile and profile.city and profile.city.lower() in job.location.lower(): score += 15
+            ranked.append((min(score, 100), job))
+        ranked.sort(key=lambda item: item[0], reverse=True)
+        data = self.get_serializer([job for _, job in ranked[:10]], many=True).data
+        for payload, (score, _) in zip(data, ranked): payload["match_percentage"] = score
+        return Response(data)
