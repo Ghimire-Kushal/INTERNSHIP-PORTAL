@@ -15,7 +15,7 @@ import EmployerApplicationsPage from "./pages/EmployerApplicationsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import InterviewsPage from "./pages/InterviewsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-//ps
+//p
 
 export default function App() {
   return <Routes>
