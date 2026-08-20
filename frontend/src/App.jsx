@@ -15,7 +15,7 @@ import EmployerApplicationsPage from "./pages/EmployerApplicationsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import InterviewsPage from "./pages/InterviewsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-//path: frontend/src/App.jsx.  
+//path: frontend/src/App.jsx.  tey
 
 export default function App() {
   return <Routes>
