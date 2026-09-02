@@ -26,7 +26,7 @@ class SavedJobsView(generics.ListCreateAPIView):
  def get_queryset(self): return SavedJob.objects.filter(student=self.request.user).select_related("job__company")
  def post(self,request):
   if request.user.role!="student": raise PermissionDenied("Student account required.")
-  job=Job.objects.filter(pk=request.data.get("job"),status="open").first()
+  job=Job.objects.filter(pk=request.data.get("job"),status="open",application_deadline__gte=timezone.localdate()).first()
   if not job: raise ValidationError("Job not found.")
   saved,_=SavedJob.objects.get_or_create(student=request.user,job=job);return Response(SavedJobSerializer(saved).data,status=201)
 class SavedJobDetailView(APIView):

@@ -24,7 +24,19 @@ class Job(models.Model):
     salary_min=models.DecimalField(max_digits=12,decimal_places=2,null=True,blank=True); salary_max=models.DecimalField(max_digits=12,decimal_places=2,null=True,blank=True); salary_currency=models.CharField(max_length=8,default="NPR")
     number_of_openings=models.PositiveIntegerField(default=1); application_deadline=models.DateField(db_index=True); posted_date=models.DateTimeField(auto_now_add=True); status=models.CharField(max_length=12,choices=Status.choices,default=Status.DRAFT,db_index=True); views=models.PositiveIntegerField(default=0); is_featured=models.BooleanField(default=False)
     created_at=models.DateTimeField(auto_now_add=True); updated_at=models.DateTimeField(auto_now=True)
-    class Meta: ordering=["-created_at"]; indexes=[models.Index(fields=["status","application_deadline"])]
+    class Meta:
+        ordering=["-created_at"]
+        indexes=[models.Index(fields=["status","application_deadline"])]
+        constraints=[
+            models.CheckConstraint(
+                condition=(
+                    models.Q(salary_min__isnull=True)
+                    | models.Q(salary_max__isnull=True)
+                    | models.Q(salary_min__lte=models.F("salary_max"))
+                ),
+                name="job_salary_min_lte_max",
+            )
+        ]
     def save(self,*args,**kwargs):
         if not self.slug: self.slug=slugify(self.title)
         base=self.slug; count=2
