@@ -19,6 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
 import CompaniesPage from "./pages/CompaniesPage";
 import CompanyDetailPage from "./pages/CompanyDetailPage";
+import EmployerJobsPage from "./pages/EmployerJobsPage";
 //path: frontend/src/App.jsx.  tey
 
 export default function App() {
@@ -29,7 +30,9 @@ export default function App() {
     <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><RoleRoute allowedRoles={["student"]}><ProfilePage /></RoleRoute></ProtectedRoute>} />
     <Route path="/employer/company" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><CompanyProfilePage /></RoleRoute></ProtectedRoute>} />
+    <Route path="/employer/jobs" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><EmployerJobsPage /></RoleRoute></ProtectedRoute>} />
     <Route path="/employer/jobs/create" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><PostJobPage /></RoleRoute></ProtectedRoute>} />
+    <Route path="/employer/jobs/:id/edit" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><PostJobPage /></RoleRoute></ProtectedRoute>} />
     <Route path="/my-applications" element={<ProtectedRoute><RoleRoute allowedRoles={["student"]}><ApplicationsPage /></RoleRoute></ProtectedRoute>} />
     <Route path="/saved-jobs" element={<ProtectedRoute><RoleRoute allowedRoles={["student"]}><SavedJobsPage /></RoleRoute></ProtectedRoute>} />
     <Route path="/employer/applications" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><EmployerApplicationsPage /></RoleRoute></ProtectedRoute>} />
