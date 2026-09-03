@@ -6,7 +6,7 @@ from .models import Notification
 from .serializers import NotificationSerializer
 class NotificationList(generics.ListAPIView):
  permission_classes=[IsAuthenticated];serializer_class=NotificationSerializer
- def get_queryset(self): return Notification.objects.filter(user=self.request.user)
+ def get_queryset(self): return Notification.objects.filter(user=self.request.user).order_by("-created_at", "-pk")
 class ReadNotification(APIView):
  permission_classes=[IsAuthenticated]
  def patch(self,request,pk): Notification.objects.filter(pk=pk,user=request.user).update(is_read=True);return Response(status=204)

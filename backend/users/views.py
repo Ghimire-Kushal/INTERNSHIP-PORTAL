@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import ChangePasswordSerializer, LoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import ChangePasswordSerializer, LoginSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, RegisterSerializer, UserSerializer
 
 
 class RegisterView(APIView):
@@ -49,3 +49,25 @@ class ChangePasswordView(APIView):
         request.user.set_password(serializer.validated_data["new_password"])
         request.user.save(update_fields=["password", "updated_at"])
         return Response({"detail": "Password changed successfully."})
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "If an account matches that email, a reset link has been sent."})
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data={**request.data, "uid": request.data.get("uid"), "token": request.data.get("token")})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password", "updated_at"])
+        return Response({"detail": "Password reset successfully. You can now sign in."})

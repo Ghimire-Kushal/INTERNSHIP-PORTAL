@@ -112,3 +112,5 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@careerbridge.local")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
