@@ -14,6 +14,7 @@ export default function JobDetailPage() {
   const { user, isAuthenticated } = useAuth();
   const [job, setJob] = useState(null);
   const [application, setApplication] = useState(null);
+  const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -31,10 +32,12 @@ export default function JobDetailPage() {
       setJob(data);
       if (user?.role === "student") {
         try {
-          const applications = await api.get("/applications/my/");
+          const [applications, savedJobs] = await Promise.all([api.get("/applications/my/"), api.get("/applications/saved/")]);
           setApplication(getItems(applications.data).find((item) => String(item.job) === String(data.id)) || null);
+          setSaved(getItems(savedJobs.data).some((item) => String(item.job) === String(data.id)));
         } catch {
           setApplication(null);
+          setSaved(false);
         }
       } else {
         setApplication(null);
@@ -62,6 +65,7 @@ export default function JobDetailPage() {
     setMessage("");
     try {
       await api.post("/applications/saved/", { job: job.id });
+      setSaved(true);
       setMessage("Saved to your list.");
     } catch (requestError) {
       setMessage(requestError.response?.data?.detail || "Unable to save this job.");
@@ -120,7 +124,7 @@ export default function JobDetailPage() {
         {deadline && <p>Applications close <b>{deadline}</b>.</p>}
         {application ? <div className="application-status"><strong>Application {humanize(application.status)}</strong><p>You applied on {new Date(application.applied_at).toLocaleDateString()}.</p><Link to="/my-applications">View application</Link></div> : user?.role === "student" ? <>
           <button className="action-button" type="button" onClick={() => setShowApplication((visible) => !visible)}>{showApplication ? "Close application" : "Apply now"}</button>
-          <button className="secondary-button" type="button" disabled={saving} onClick={saveJob}>{saving ? "Saving…" : "Save job"}</button>
+          <button className="secondary-button" type="button" disabled={saving || saved} onClick={saveJob}>{saved ? "Saved ✓" : saving ? "Saving…" : "Save job"}</button>
         </> : !isAuthenticated ? <Link className="action-button" to="/login" state={{ from: { pathname: `/jobs/${id}` } }}>Log in to apply</Link> : <p className="muted">Only student accounts can apply for opportunities.</p>}
         {message && <p className={message.includes("submitted") || message.includes("Saved") ? "form-success" : "form-error"}>{message}</p>}
         {showApplication && <form className="application-form" onSubmit={submitApplication}><label>Cover letter <span className="optional">Optional</span><textarea value={form.cover_letter} onChange={(event) => setForm({ ...form, cover_letter: event.target.value })} placeholder="Briefly introduce yourself and explain your interest." rows="6" /></label><label>CV / résumé <span className="optional">Optional</span><input type="file" accept=".pdf,.doc,.docx" onChange={(event) => setForm({ ...form, cv: event.target.files?.[0] || null })} /></label><button className="action-button" disabled={applying}>{applying ? "Submitting…" : "Submit application"}</button></form>}

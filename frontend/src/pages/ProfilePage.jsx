@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import SiteHeader from "../components/SiteHeader";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 const profileDefaults = {
   headline: "", bio: "", address: "", city: "", country: "", date_of_birth: "", gender: "", university: "", degree: "", graduation_year: "", current_semester: "", portfolio_url: "", linkedin_url: "", github_url: "", cv: null,
@@ -111,6 +112,7 @@ function Field({ field, form, setForm }) {
 }
 
 export default function ProfilePage() {
+  const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState(profileDefaults);
   const [education, setEducation] = useState([]);
   const [studentSkills, setStudentSkills] = useState([]);
@@ -119,6 +121,7 @@ export default function ProfilePage() {
   const [projects, setProjects] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [cvFile, setCvFile] = useState(null);
+  const [profileImageFile, setProfileImageFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -165,6 +168,13 @@ export default function ProfilePage() {
         response = await api.patch("/students/me/", payload);
       }
       setProfile({ ...profileDefaults, ...response.data });
+      if (profileImageFile) {
+        const userForm = new FormData();
+        userForm.append("profile_image", profileImageFile);
+        const userResponse = await api.patch("/auth/profile/", userForm);
+        updateUser(userResponse.data);
+        setProfileImageFile(null);
+      }
       setCvFile(null);
       setMessage("Profile saved.");
     } catch (requestError) {
@@ -185,7 +195,7 @@ export default function ProfilePage() {
       <div className="page-heading"><div><p className="eyebrow">STUDENT PROFILE</p><h1>Show employers what you can do.</h1><p className="intro">A complete profile improves the opportunities we can recommend to you.</p></div><div className="completion-card"><span>Profile completion</span><strong>{profile.profile_completion || 0}%</strong></div></div>
       {error && <div className="page-feedback error"><p>{error}</p><button type="button" onClick={load}>Try again</button></div>}
       <form className="profile-form" onSubmit={saveProfile}>
-        <section className="profile-card"><div className="section-heading"><div><h2>About you</h2><p>Share the essentials employers see first.</p></div></div><div className="form-grid"><Field field={{ name: "headline", label: "Professional headline" }} form={profile} setForm={setProfile} /><Field field={{ name: "city", label: "City" }} form={profile} setForm={setProfile} /><Field field={{ name: "country", label: "Country" }} form={profile} setForm={setProfile} /><Field field={{ name: "address", label: "Address" }} form={profile} setForm={setProfile} /><Field field={{ name: "date_of_birth", label: "Date of birth", type: "date" }} form={profile} setForm={setProfile} /><Field field={{ name: "gender", label: "Gender" }} form={profile} setForm={setProfile} /></div><Field field={{ name: "bio", label: "Professional summary", type: "textarea" }} form={profile} setForm={setProfile} /></section>
+        <section className="profile-card"><div className="section-heading"><div><h2>About you</h2><p>Share the essentials employers see first.</p></div></div><div className="profile-photo-row">{user?.profile_image ? <img className="profile-photo" src={user.profile_image} alt="Your profile" /> : <div className="profile-photo placeholder-photo">{user?.first_name?.[0] || "Y"}</div>}<label>Profile photo <span className="optional">JPG, PNG, or WEBP (max 3 MB)</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setProfileImageFile(event.target.files?.[0] || null)} /></label></div><div className="form-grid"><Field field={{ name: "headline", label: "Professional headline" }} form={profile} setForm={setProfile} /><Field field={{ name: "city", label: "City" }} form={profile} setForm={setProfile} /><Field field={{ name: "country", label: "Country" }} form={profile} setForm={setProfile} /><Field field={{ name: "address", label: "Address" }} form={profile} setForm={setProfile} /><Field field={{ name: "date_of_birth", label: "Date of birth", type: "date" }} form={profile} setForm={setProfile} /><Field field={{ name: "gender", label: "Gender" }} form={profile} setForm={setProfile} /></div><Field field={{ name: "bio", label: "Professional summary", type: "textarea" }} form={profile} setForm={setProfile} /></section>
         <section className="profile-card"><div className="section-heading"><div><h2>Education and links</h2><p>Give your academic and professional context.</p></div></div><div className="form-grid"><Field field={{ name: "university", label: "University" }} form={profile} setForm={setProfile} /><Field field={{ name: "degree", label: "Degree" }} form={profile} setForm={setProfile} /><Field field={{ name: "graduation_year", label: "Graduation year", type: "number" }} form={profile} setForm={setProfile} /><Field field={{ name: "current_semester", label: "Current semester" }} form={profile} setForm={setProfile} /><Field field={{ name: "portfolio_url", label: "Portfolio URL", type: "url" }} form={profile} setForm={setProfile} /><Field field={{ name: "linkedin_url", label: "LinkedIn URL", type: "url" }} form={profile} setForm={setProfile} /><Field field={{ name: "github_url", label: "GitHub URL", type: "url" }} form={profile} setForm={setProfile} /></div><label>CV / résumé <span className="optional">PDF, DOC, or DOCX (max 5 MB)</span><input type="file" accept=".pdf,.doc,.docx" onChange={(event) => setCvFile(event.target.files?.[0] || null)} />{profile.cv && <a className="external-link" href={profile.cv} target="_blank" rel="noreferrer">View current CV ↗</a>}</label></section>
         {message && <p className="form-success">{message}</p>}<button className="action-button profile-save" disabled={saving}>{saving ? "Saving profile…" : "Save profile"}</button>
       </form>

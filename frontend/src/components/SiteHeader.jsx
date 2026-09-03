@@ -22,6 +22,7 @@ export default function SiteHeader() {
           {user?.role === "student" && <Link to="/my-applications">Applications</Link>}
           {user?.role === "employer" && <Link to="/employer/applications">Applicants</Link>}
           <Link to="/notifications">Notifications</Link>
+          <Link to="/account/security">Security</Link>
           <button className="link-button" type="button" onClick={handleLogout}>Log out</button>
         </> : <>
           <Link to="/login">Log in</Link>

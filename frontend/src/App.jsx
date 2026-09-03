@@ -21,6 +21,7 @@ import CompaniesPage from "./pages/CompaniesPage";
 import CompanyDetailPage from "./pages/CompanyDetailPage";
 import EmployerJobsPage from "./pages/EmployerJobsPage";
 import PasswordResetPage, { ForgotPasswordPage } from "./pages/PasswordResetPage";
+import AccountSecurityPage from "./pages/AccountSecurityPage";
 //path: frontend/src/App.jsx.  tey
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
     <Route path="/reset-password/:uid/:token" element={<PasswordResetPage />} />
     <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+    <Route path="/account/security" element={<ProtectedRoute><AccountSecurityPage /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><RoleRoute allowedRoles={["student"]}><ProfilePage /></RoleRoute></ProtectedRoute>} />
     <Route path="/employer/company" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><CompanyProfilePage /></RoleRoute></ProtectedRoute>} />
     <Route path="/employer/jobs" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><EmployerJobsPage /></RoleRoute></ProtectedRoute>} />
