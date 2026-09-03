@@ -21,6 +21,8 @@ export default function JobsPage({ jobType = "", title = "Find your next opportu
   const [category, setCategory] = useState("");
   const [workMode, setWorkMode] = useState("");
   const [type, setType] = useState("");
+  const [minimumSalary, setMinimumSalary] = useState("");
+  const [sort, setSort] = useState("latest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -55,9 +57,12 @@ export default function JobsPage({ jobType = "", title = "Find your next opportu
         && (!jobType || job.job_type === jobType)
         && (!category || String(job.category) === category)
         && (!workMode || job.work_mode === workMode)
-        && (!type || job.job_type === type);
+        && (!type || job.job_type === type)
+        && (!minimumSalary || Number(job.salary_max || job.salary_min || 0) >= Number(minimumSalary));
     });
-  }, [category, jobType, jobs, query, type, workMode]);
+  }, [category, jobType, jobs, minimumSalary, query, type, workMode]);
+
+  const sortedJobs = useMemo(() => [...shownJobs].sort((first, second) => sort === "oldest" ? new Date(first.created_at) - new Date(second.created_at) : new Date(second.created_at) - new Date(first.created_at)), [shownJobs, sort]);
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -71,6 +76,8 @@ export default function JobsPage({ jobType = "", title = "Find your next opportu
     setCategory("");
     setWorkMode("");
     setType("");
+    setMinimumSalary("");
+    setSort("latest");
     setQuery("");
     setSearchParams({}, { replace: true });
   };
@@ -91,11 +98,13 @@ export default function JobsPage({ jobType = "", title = "Find your next opportu
         <label>Category<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
         <label>Work style<select value={workMode} onChange={(event) => setWorkMode(event.target.value)}><option value="">All work styles</option><option value="onsite">On-site</option><option value="hybrid">Hybrid</option><option value="remote">Remote</option></select></label>
         {!jobType && <label>Employment type<select value={type} onChange={(event) => setType(event.target.value)}>{typeOptions.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>}
+        <label>Minimum salary<select value={minimumSalary} onChange={(event) => setMinimumSalary(event.target.value)}><option value="">Any salary</option><option value="25000">NPR 25,000+</option><option value="50000">NPR 50,000+</option><option value="100000">NPR 100,000+</option></select></label>
+        <label>Sort<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="latest">Latest first</option><option value="oldest">Oldest first</option></select></label>
         <button className="secondary-button filter-reset" type="button" onClick={clearFilters}>Clear filters</button>
       </div>
       {loading ? <p className="page-feedback">Loading opportunities…</p> : error ? <div className="page-feedback error"><p>{error}</p><button type="button" onClick={load}>Try again</button></div> : shownJobs.length ? <>
-        <p className="results-summary">{shownJobs.length} {shownJobs.length === 1 ? "opportunity" : "opportunities"} available</p>
-        <div className="job-grid">{shownJobs.map((job) => <JobCard job={job} key={job.id} />)}</div>
+        <p className="results-summary">{sortedJobs.length} {sortedJobs.length === 1 ? "opportunity" : "opportunities"} available</p>
+        <div className="job-grid">{sortedJobs.map((job) => <JobCard job={job} key={job.id} />)}</div>
       </> : <div className="empty-state"><h2>No matching opportunities</h2><p>Try broadening your search or changing a filter.</p><button type="button" className="secondary-button" onClick={clearFilters}>Reset filters</button>{jobType === "internship" && <Link to="/jobs">Browse all jobs</Link>}</div>}
     </section>
   </main>;

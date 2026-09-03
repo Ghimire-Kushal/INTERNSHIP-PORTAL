@@ -12,7 +12,8 @@ export default function JobCard({ job, showMatch = false }) {
     </div>
     <p>{job.company_name || "Company"}</p>
     <h2>{job.title}</h2>
-    <span>{job.location} · {humanize(job.work_mode)}</span>
+    <span>{job.location || "Location flexible"} · {humanize(job.work_mode) || "Work mode flexible"}</span>
+    {(job.salary_min || job.salary_max || job.skills_required) && <div className="job-card-meta">{job.salary_min || job.salary_max ? <span>{job.salary_min && job.salary_max ? `${job.salary_min} – ${job.salary_max}` : `Salary disclosed`}</span> : null}{job.skills_required && <span>{job.skills_required.split(",").slice(0, 2).map((skill) => skill.trim()).join(" · ")}</span>}</div>}
     <footer>
       <b>{humanize(job.job_type)}</b>
       <em>{deadline ? `Closes ${deadline}` : "View role →"}</em>
