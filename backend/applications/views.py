@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -7,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from jobs.models import Job
 from notifications.models import Notification
-from .models import Application
+from .models import Application, ApplicationEvent
 from .models import SavedJob
 from .serializers import ApplicationSerializer, StatusSerializer
 from .serializers import SavedJobSerializer
@@ -34,6 +35,7 @@ class InterviewsView(generics.ListCreateAPIView):
    interview=serializer.save(application=application)
    application.status=Application.Status.INTERVIEW
    application.save(update_fields=["status","updated_at"])
+   ApplicationEvent.objects.create(application=application,status=application.status,note="Interview scheduled")
    scheduled_at=interview.scheduled_at.strftime("%B %d, %Y at %I:%M %p")
    Notification.objects.create(
     user=application.student,
@@ -66,6 +68,7 @@ class ApplyView(APIView):
     serializer.save(job=job,student=request.user,cv=request.user.student_profile.cv)
    else:
     serializer.save(job=job,student=request.user)
+   ApplicationEvent.objects.create(application=serializer.instance,status=Application.Status.APPLIED,note="Application submitted")
    Notification.objects.create(
     user=job.company.owner,
     title="New application received",
@@ -83,12 +86,17 @@ class WithdrawView(APIView):
  def patch(self,request,pk):
   application=Application.objects.filter(pk=pk,student=request.user).first()
   if not application: raise PermissionDenied("Application not found.")
-  application.status=Application.Status.WITHDRAWN;application.save(update_fields=["status","updated_at"]);return Response(ApplicationSerializer(application).data)
+  application.status=Application.Status.WITHDRAWN;application.save(update_fields=["status","updated_at"]);ApplicationEvent.objects.create(application=application,status=application.status,note="Application withdrawn by student");return Response(ApplicationSerializer(application).data)
 class ApplicantsView(generics.ListAPIView):
  permission_classes=[IsAuthenticated];serializer_class=ApplicationSerializer
  def get_queryset(self):
   if self.request.user.role!="employer": raise PermissionDenied("Employer account required.")
-  return Application.objects.filter(job_id=self.kwargs["job_id"],job__company__owner=self.request.user).select_related("student","job__company")
+  qs=Application.objects.filter(job_id=self.kwargs["job_id"],job__company__owner=self.request.user).select_related("student","job__company")
+  status=self.request.query_params.get("status")
+  search=self.request.query_params.get("search")
+  if status: qs=qs.filter(status=status)
+  if search: qs=qs.filter(Q(student__first_name__icontains=search)|Q(student__last_name__icontains=search)|Q(student__email__icontains=search))
+  return qs
 class UpdateStatusView(APIView):
  permission_classes=[IsAuthenticated]
  def patch(self,request,pk):
@@ -99,6 +107,7 @@ class UpdateStatusView(APIView):
   with transaction.atomic():
    serializer.save()
    if "status" in serializer.validated_data and application.status != previous_status:
+    ApplicationEvent.objects.create(application=application,status=application.status,note=application.employer_note or "Status updated by employer")
     Notification.objects.create(
      user=application.student,
      title="Application status updated",

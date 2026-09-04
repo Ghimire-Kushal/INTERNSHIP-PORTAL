@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Application
+from .models import Application, ApplicationEvent
 from .models import SavedJob
 from .models import Interview
 class InterviewSerializer(serializers.ModelSerializer):
@@ -10,7 +10,9 @@ class SavedJobSerializer(serializers.ModelSerializer):
     class Meta: model=SavedJob; fields=("id","job","title","company_name","saved_at")
 class ApplicationSerializer(serializers.ModelSerializer):
     job_title=serializers.CharField(source="job.title",read_only=True); company_name=serializers.CharField(source="job.company.company_name",read_only=True); student_name=serializers.CharField(source="student.get_full_name",read_only=True); student_email=serializers.EmailField(source="student.email",read_only=True)
-    class Meta: model=Application; fields="__all__"; read_only_fields=("job","student","status","applied_at","updated_at","employer_note")
+    events=serializers.SerializerMethodField()
+    class Meta: model=Application; fields="__all__"; read_only_fields=("job","student","status","applied_at","updated_at","employer_note","events")
+    def get_events(self, obj): return ApplicationEventSerializer(obj.events.all(), many=True).data
     def validate_cv(self, value):
         if value and value.size > 5 * 1024 * 1024:
             raise serializers.ValidationError("CV must be 5 MB or smaller.")
@@ -19,3 +21,6 @@ class ApplicationSerializer(serializers.ModelSerializer):
         return value
 class StatusSerializer(serializers.ModelSerializer):
     class Meta: model=Application; fields=("status","employer_note")
+
+class ApplicationEventSerializer(serializers.ModelSerializer):
+    class Meta: model=ApplicationEvent; fields=("id","status","note","created_at")

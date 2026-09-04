@@ -43,3 +43,15 @@ class Job(models.Model):
         while Job.objects.exclude(pk=self.pk).filter(slug=self.slug).exists(): self.slug=f"{base}-{count}"; count+=1
         super().save(*args,**kwargs)
     def __str__(self): return self.title
+
+class JobAlert(models.Model):
+    student=models.ForeignKey("users.User",on_delete=models.CASCADE,related_name="job_alerts")
+    name=models.CharField(max_length=120)
+    keywords=models.CharField(max_length=255,blank=True)
+    location=models.CharField(max_length=160,blank=True)
+    category=models.ForeignKey(Category,on_delete=models.SET_NULL,null=True,blank=True,related_name="job_alerts")
+    job_type=models.CharField(max_length=20,choices=Job.JobType.choices,blank=True)
+    work_mode=models.CharField(max_length=20,choices=Job.WorkMode.choices,blank=True)
+    is_active=models.BooleanField(default=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    class Meta: ordering=["-created_at"]

@@ -1,6 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
-from .models import Category, Job
+from .models import Category, Job, JobAlert
 class CategorySerializer(serializers.ModelSerializer):
     class Meta: model=Category; fields=("id","name","slug","description")
 class JobSerializer(serializers.ModelSerializer):
@@ -15,3 +15,10 @@ class JobSerializer(serializers.ModelSerializer):
         deadline=attrs.get("application_deadline")
         if deadline and deadline < timezone.localdate(): raise serializers.ValidationError({"application_deadline":"Deadline cannot be in the past."})
         return attrs
+
+class JobAlertSerializer(serializers.ModelSerializer):
+    category_name=serializers.CharField(source="category.name",read_only=True)
+    class Meta:
+        model=JobAlert
+        fields="__all__"
+        read_only_fields=("student","created_at")

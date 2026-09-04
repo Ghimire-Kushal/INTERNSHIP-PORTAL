@@ -6,11 +6,18 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from companies.models import Company
-from .models import Category, Job
-from .serializers import CategorySerializer, JobSerializer
+from .models import Category, Job, JobAlert
+from .serializers import CategorySerializer, JobAlertSerializer, JobSerializer
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset=Category.objects.all(); serializer_class=CategorySerializer; permission_classes=[AllowAny]; pagination_class=None
+
+class JobAlertViewSet(viewsets.ModelViewSet):
+    serializer_class=JobAlertSerializer; permission_classes=[IsAuthenticated]
+    def get_queryset(self): return JobAlert.objects.filter(student=self.request.user).select_related("category")
+    def perform_create(self, serializer):
+        if self.request.user.role != "student": raise PermissionDenied("Student account required.")
+        serializer.save(student=self.request.user)
 class JobViewSet(viewsets.ModelViewSet):
     serializer_class=JobSerializer; filter_backends=[filters.SearchFilter,filters.OrderingFilter]; search_fields=["title","company__company_name","skills_required","location"]; ordering_fields=["created_at","salary_min","application_deadline","views"]
 
