@@ -40,7 +40,7 @@ export default function SiteHeader() {
         <Link className={isActive("/companies") ? "active" : ""} to="/companies" onClick={closeMenu}>Companies</Link>
         {isAuthenticated ? <>
           <Link className={isActive("/dashboard") ? "active" : ""} to="/dashboard" onClick={closeMenu}>Dashboard</Link>
-          {user?.role === "student" && <><Link className={isActive("/saved-jobs") ? "active" : ""} to="/saved-jobs" onClick={closeMenu}>Saved jobs</Link><Link className={isActive("/my-applications") ? "active" : ""} to="/my-applications" onClick={closeMenu}>Applications</Link></>}
+          {user?.role === "student" && <><Link className={isActive("/saved-jobs") ? "active" : ""} to="/saved-jobs" onClick={closeMenu}>Saved jobs</Link><Link className={isActive("/job-alerts") ? "active" : ""} to="/job-alerts" onClick={closeMenu}>Job alerts</Link><Link className={isActive("/my-applications") ? "active" : ""} to="/my-applications" onClick={closeMenu}>Applications</Link></>}
           {user?.role === "employer" && <Link className={isActive("/employer/jobs") ? "active" : ""} to="/employer/jobs" onClick={closeMenu}>Manage jobs</Link>}
           <Link className={isActive("/notifications") ? "active" : ""} to="/notifications" onClick={closeMenu}>Notifications{unreadCount > 0 && <span className="notification-badge" aria-label={`${unreadCount} unread notifications`}>{unreadCount > 99 ? "99+" : unreadCount}</span>}</Link>
           <Link className={isActive("/account/security") ? "active" : ""} to="/account/security" onClick={closeMenu}>Account</Link>
