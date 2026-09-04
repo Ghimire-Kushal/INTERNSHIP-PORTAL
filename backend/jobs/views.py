@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from companies.models import Company
+from notifications.models import Notification
 from .models import Category, Job, JobAlert
 from .serializers import CategorySerializer, JobAlertSerializer, JobSerializer
 
@@ -86,7 +87,19 @@ class JobViewSet(viewsets.ModelViewSet):
         if self.request.user.role != "employer": raise PermissionDenied("Only employers can post jobs.")
         company=Company.objects.filter(owner=self.request.user).first()
         if not company: raise PermissionDenied("Create your company profile before posting a job.")
-        serializer.save(company=company)
+        job = serializer.save(company=company)
+        if job.status == Job.Status.OPEN:
+            alerts = JobAlert.objects.filter(is_active=True).filter(
+                Q(job_type="") | Q(job_type=job.job_type),
+                Q(work_mode="") | Q(work_mode=job.work_mode),
+            )
+            for alert in alerts:
+                haystack = f"{job.title} {job.skills_required} {job.description}".lower()
+                if alert.keywords and not any(word.strip().lower() in haystack for word in alert.keywords.split(",")):
+                    continue
+                if alert.location and alert.location.lower() not in job.location.lower():
+                    continue
+                Notification.objects.create(user=alert.student,title="New job matching your alert",message=f"{job.title} at {job.company.company_name} matches your alert: {alert.name}.",notification_type="job_alert")
     @action(detail=False, methods=["get"])
     def mine(self, request):
         if request.user.role != "employer": raise PermissionDenied("Only employers can manage jobs.")

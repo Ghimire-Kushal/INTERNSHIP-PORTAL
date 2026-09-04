@@ -19,6 +19,8 @@ export default function EmployerApplicationsPage() {
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
 
   const loadJobs = async () => {
     setLoadingJobs(true);
@@ -44,7 +46,7 @@ export default function EmployerApplicationsPage() {
     setLoadingApplications(true);
     setError("");
     try {
-      const { data } = await api.get(`/applications/jobs/${jobId}/applicants/`);
+      const { data } = await api.get(`/applications/jobs/${jobId}/applicants/`, { params: { status: statusFilter || undefined, search: search || undefined } });
       setApplications(getItems(data));
     } catch {
       setError("Unable to load applicants for this job.");
@@ -54,7 +56,9 @@ export default function EmployerApplicationsPage() {
   };
 
   useEffect(() => { loadJobs(); }, []);
-  useEffect(() => { loadApplications(); }, [jobId]);
+  useEffect(() => { loadApplications(); }, [jobId, statusFilter]);
+
+  const submitSearch = (event) => { event.preventDefault(); loadApplications(); };
 
   const updateStatus = async (application, status) => {
     setBusyId(application.id);
@@ -94,6 +98,7 @@ export default function EmployerApplicationsPage() {
     <SiteHeader />
     <section className="profile-shell applicants-shell"><div className="page-heading"><div><p className="eyebrow">EMPLOYER TOOLS</p><h1>Review applicants.</h1><p className="intro">Keep every candidate moving with a clear and current application status.</p></div><Link className="secondary-button inline-button" to="/employer/jobs">Manage jobs</Link></div>
       {jobs.length > 0 && <label className="job-picker">Job posting<select value={jobId} onChange={(event) => setJobId(event.target.value)}>{jobs.map((job) => <option key={job.id} value={job.id}>{job.title}</option>)}</select></label>}
+      {jobs.length > 0 && <form className="jobs-search applicant-search" onSubmit={submitSearch}><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search applicants by name or email" /><button type="submit">Search</button><select aria-label="Filter applicants by status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">All statuses</option>{statuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></form>}
       {message && <p className="form-success">{message}</p>}
       {error && <div className="page-feedback error"><p>{error}</p><button type="button" onClick={jobId ? loadApplications : loadJobs}>Try again</button></div>}
       {loading ? <p className="page-feedback">Loading applicants…</p> : !jobs.length ? <div className="empty-state"><h2>Post a job to begin</h2><p>Once candidates apply, you can review and manage them here.</p><Link className="action-button" to="/employer/jobs/create">Post a job</Link></div> : applications.length ? <div className="applicant-list">{applications.map((application) => <article className="applicant-card" key={application.id}><div><div className="job-status-row"><span className={`status-pill ${application.status}`}>{label(application.status)}</span><span>Applied {new Date(application.applied_at).toLocaleDateString()}</span></div><h2>{application.student_name || application.student_email}</h2><p>{application.student_email}</p>{application.cover_letter && <p className="cover-letter">{application.cover_letter}</p>}{application.cv && <a className="external-link" href={application.cv} target="_blank" rel="noreferrer">View CV ↗</a>}</div><div className="applicant-actions"><label>Status<select disabled={busyId === application.id || application.status === "withdrawn"} value={application.status} onChange={(event) => updateStatus(application, event.target.value)}>{statuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></label>{application.status !== "withdrawn" && <button className="secondary-button" type="button" disabled={busyId === application.id} onClick={() => setSelectedApplication(application)}>Schedule interview</button>}</div></article>)}</div> : <div className="empty-state compact"><h2>No applications for this job yet</h2><p>Share your posting to reach more candidates.</p></div>}
