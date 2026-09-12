@@ -33,6 +33,7 @@ export default function App() {
     <Route path="/register" element={<RegisterPage />} />
     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
     <Route path="/reset-password/:uid/:token" element={<PasswordResetPage />} />
+    {/* Authenticated routes are wrapped to enforce the session requirement. */}
     <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
     <Route path="/account/security" element={<ProtectedRoute><AccountSecurityPage /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><RoleRoute allowedRoles={["student"]}><ProfilePage /></RoleRoute></ProtectedRoute>} />
