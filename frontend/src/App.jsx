@@ -47,6 +47,7 @@ export default function App() {
     <Route path="/employer/applications" element={<ProtectedRoute><RoleRoute allowedRoles={["employer"]}><EmployerApplicationsPage /></RoleRoute></ProtectedRoute>} />
     <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
     <Route path="/interviews" element={<ProtectedRoute><InterviewsPage /></ProtectedRoute>} />
+    {/* Browse routes remain available without signing in. */}
     <Route path="/jobs" element={<JobsPage />} />
     <Route path="/jobs/:id" element={<JobDetailPage />} />
     <Route path="/internships" element={<JobsPage jobType="internship" title="Internship opportunities" intro="Launch your career with practical work experience from growing teams." />} />
