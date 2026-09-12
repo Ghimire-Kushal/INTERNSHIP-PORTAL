@@ -24,6 +24,7 @@ import PasswordResetPage, { ForgotPasswordPage } from "./pages/PasswordResetPage
 import AccountSecurityPage from "./pages/AccountSecurityPage";
 import JobAlertsPage from "./pages/JobAlertsPage";
 // Application route map for the job portal.
+// Public routes are listed first for quick navigation reference.
 
 export default function App() {
   return <Routes>
